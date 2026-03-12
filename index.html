@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>医疗空间布局量化评估系统 | 流体毛玻璃交互沙盒</title>
+    <title>多维空间智能规划与院感合规推演体系 | Digital Twin Simulator</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- KaTeX 用于渲染数学公式 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    animation: {
-                        'blob': 'blob 15s infinite alternate',
+                    colors: {
+                        dark: '#0b1121',
+                        darker: '#060913',
+                        panel: '#151e32',
+                        patient: '#10b981', // 绿色
+                        staff: '#3b82f6',   // 蓝色
+                        clean: '#f59e0b',   // 黄色
+                        waste: '#ef4444'    // 红色
                     },
-                    keyframes: {
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        }
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
@@ -31,703 +29,643 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
         
         body { 
-            font-family: 'Inter', system-ui, sans-serif; 
-            background-color: #f1f5f9; 
-            background-image: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%);
-            min-height: 100vh;
-        }
-        
-        /* 核心流体毛玻璃样式 */
-        .liquid-glass {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 100%);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 
-                0 8px 32px 0 rgba(31, 38, 135, 0.07),
-                inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
-        }
-
-        /* 内部凹陷毛玻璃 */
-        .liquid-glass-inner {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.03), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
-        }
-
-        /* 毛玻璃表单元素 */
-        .glass-input {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            color: #334155;
-            transition: all 0.2s;
-        }
-        .glass-input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.8);
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-        
-        canvas { 
-            border-radius: 1rem; 
-            touch-action: none; 
-        }
-        
-        .interactive-canvas-wrapper {
-            position: relative;
-            width: 100%;
-            background: linear-gradient(to bottom right, rgba(248, 250, 252, 0.6), rgba(241, 245, 249, 0.3));
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: 
-                inset 0 4px 12px rgba(0, 0, 0, 0.05),
-                inset 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-        
-        table { border-collapse: separate; border-spacing: 0; width: 100%; }
-        th, td { 
-            border-bottom: 1px solid rgba(226, 232, 240, 0.5); 
-            padding: 12px 10px; 
-            text-align: center; 
-        }
-        th { 
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(5px);
-            font-weight: 600; 
-            color: #475569; 
-            letter-spacing: 0.02em;
-        }
-        
-        .tool-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .delay-2000 { animation-delay: 2s; }
-        .delay-4000 { animation-delay: 4s; }
-
-        input[type="color"] {
-            -webkit-appearance: none;
-            border: none;
+            font-family: 'Noto Sans SC', system-ui, sans-serif; 
+            background-color: #060913; 
+            color: #e2e8f0;
+            overflow: hidden; /* 防止全屏滚动 */
+            margin: 0;
             padding: 0;
-            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.375rem; }
+
+        .cyber-panel {
+            background: rgba(21, 30, 50, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.05);
+        }
+
+        .cyber-button {
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .cyber-button:hover {
+            box-shadow: 0 0 15px currentColor;
+        }
+        .cyber-button.active {
+            background-color: currentColor;
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.8); }
+
+        .log-entry {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        #canvas-container {
+            cursor: crosshair;
+            background-image: 
+                linear-gradient(rgba(30, 41, 59, 0.5) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.5) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
     </style>
 </head>
-<body class="text-slate-800 p-4 md:p-8 max-w-7xl mx-auto selection:bg-blue-200/50 relative overflow-x-hidden">
+<body class="h-screen w-screen flex flex-col">
 
-    <!-- 动态背景层 -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-300/40 mix-blend-multiply filter blur-3xl animate-blob"></div>
-        <div class="absolute top-[20%] right-[-5%] w-[400px] h-[400px] rounded-full bg-teal-300/40 mix-blend-multiply filter blur-3xl animate-blob delay-2000"></div>
-        <div class="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] rounded-full bg-indigo-300/30 mix-blend-multiply filter blur-3xl animate-blob delay-4000"></div>
-    </div>
-
-    <header class="mb-12 text-center md:text-left relative z-10 pl-2">
-        <div class="inline-block bg-white/40 backdrop-blur-md border border-white/60 text-blue-800 text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-wide shadow-sm">
-            ✦ 图论与 A* 寻路算法驱动
+    <!-- 顶部导航 -->
+    <header class="h-16 cyber-panel border-b border-blue-500/30 flex items-center justify-between px-6 z-20 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 rounded bg-blue-500/20 border border-blue-400 flex items-center justify-center shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                <span class="text-blue-400 font-bold">A*</span>
+            </div>
+            <h1 class="text-xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                多维空间合规推演引擎 v2.0
+            </h1>
         </div>
-        <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 mb-4 tracking-tight drop-shadow-sm">
-            🏥 医院急诊组团：空间布局沙盒
-        </h1>
-        <p class="text-slate-600 md:text-lg max-w-3xl font-medium">在数字孪生环境中拖拽科室、建造墙体，系统将实时计算流线成本与拓扑效率。</p>
+        <div class="flex gap-6 text-sm font-mono">
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-patient shadow-[0_0_8px_#10b981]"></div>患者流</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-staff shadow-[0_0_8px_#3b82f6]"></div>医护流</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-clean shadow-[0_0_8px_#f59e0b]"></div>洁净/无菌</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-waste shadow-[0_0_8px_#ef4444]"></div>污废流</div>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="exportProject()" class="cyber-button text-blue-400 border border-blue-500/50 rounded py-1 px-3 text-xs font-bold hover:bg-blue-500/20">
+                📥 导出方案
+            </button>
+            <input type="file" id="importFile" accept=".json" class="hidden" onchange="importProject(event)">
+            <button onclick="document.getElementById('importFile').click()" class="cyber-button text-green-400 border border-green-500/50 rounded py-1 px-3 text-xs font-bold hover:bg-green-500/20">
+                📤 导入方案
+            </button>
+        </div>
     </header>
 
-    <!-- 第一部分：拓扑与聚类系数 -->
-    <section class="mb-12 liquid-glass p-1 md:p-8 rounded-[2rem] relative z-10 group">
-        <div class="absolute top-0 left-8 w-16 h-1 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-b-full opacity-70"></div>
+    <!-- 主体布局 -->
+    <main class="flex-1 flex overflow-hidden">
         
-        <div class="p-5 md:p-0">
-            <h2 class="text-xl md:text-2xl font-bold mb-8 text-slate-800 flex items-center">
-                <span class="bg-white/50 border border-white shadow-sm text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mr-4 text-base backdrop-blur-md">1</span>
-                拓扑图抽象与局部连通性
-            </h2>
+        <!-- 左侧面板：控制与物理建模 -->
+        <aside class="w-80 cyber-panel border-r border-blue-500/30 flex flex-col z-10 shrink-0">
+            <div class="p-5 border-b border-blue-500/20">
+                <h2 class="text-xs text-blue-400 font-bold tracking-widest mb-4">🛠️ 物理空间重构工具</h2>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setMode('move')" id="tool-move" class="cyber-button active text-slate-300 border border-slate-600 rounded py-2 text-xs font-bold hover:text-white" style="color:#e2e8f0;">
+                        👆 移动节点
+                    </button>
+                    <button onclick="setMode('build')" id="tool-build" class="cyber-button text-slate-300 border border-slate-600 rounded py-2 text-xs font-bold hover:text-white" style="color:#e2e8f0;">
+                        🧱 砌墙
+                    </button>
+                    <button onclick="setMode('erase')" id="tool-erase" class="cyber-button text-slate-300 border border-slate-600 rounded py-2 text-xs font-bold hover:text-white" style="color:#e2e8f0;">
+                        🧽 拆除
+                    </button>
+                </div>
+                <button onclick="clearWalls()" class="w-full mt-3 border border-red-500/50 text-red-400 hover:bg-red-500/20 rounded py-2 text-xs font-bold transition">
+                    ⚠️ 清空所有墙体
+                </button>
+            </div>
             
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-                <div class="order-2 lg:order-1 flex flex-col items-center liquid-glass-inner p-8 rounded-3xl">
-                    <div class="flex space-x-3 mb-8 bg-black/5 p-1.5 rounded-2xl w-full max-w-sm backdrop-blur-sm border border-white/20">
-                        <button onclick="setTopology('A')" id="btn-topo-A" class="flex-1 py-2.5 rounded-xl shadow-md bg-white/80 text-blue-600 font-bold backdrop-blur border border-white/50 transition-all">预设 A</button>
-                        <button onclick="setTopology('B')" id="btn-topo-B" class="flex-1 py-2.5 rounded-xl text-slate-600 font-medium hover:bg-white/40 backdrop-blur border border-transparent transition-all">预设 B</button>
-                        <button id="btn-topo-Custom" class="flex-1 py-2.5 rounded-xl text-slate-600 font-medium opacity-50 cursor-not-allowed transition-all" disabled>自定义</button>
+            <!-- 底图导入功能 -->
+            <div class="p-5 border-b border-blue-500/20">
+                <h2 class="text-xs text-blue-400 font-bold tracking-widest mb-4">🖼️ 底图导入</h2>
+                <div class="space-y-3">
+                    <input type="file" id="backgroundImage" accept="image/*" class="w-full text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/40 cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs text-slate-400 w-20">透明度:</label>
+                        <input type="range" id="imageOpacity" min="0" max="100" value="70" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <span id="opacityValue" class="text-xs text-slate-300 w-8">70%</span>
                     </div>
-                    <div class="w-full max-w-[400px]">
-                        <canvas id="topologyCanvas" width="400" height="300" class="w-full h-auto bg-transparent"></canvas>
-                    </div>
+                    <button onclick="removeBackgroundImage()" class="w-full border border-slate-600 text-slate-400 hover:bg-slate-700/30 rounded py-2 text-xs font-bold transition">
+                        🗑️ 移除底图
+                    </button>
                 </div>
+            </div>
 
-                <div class="order-1 lg:order-2">
-                    <p class="mb-6 text-slate-700 leading-relaxed text-lg">
-                        拓扑图展示了系统中各科室的<strong class="text-slate-900 bg-white/30 px-2 py-0.5 rounded-md">逻辑业务关联</strong>。当下方的沙盒科室或流线被增删改后，此拓扑图将自动切换至<span class="text-blue-600 font-bold">「自定义模式」</span>并实时重绘连线关系。
-                    </p>
-                    
-                    <div class="liquid-glass-inner p-6 md:p-8 rounded-3xl relative overflow-hidden">
-                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-400/20 rounded-full blur-2xl"></div>
-                        <div id="math-formula-1" class="text-lg text-slate-800 mb-3 relative z-10 font-medium"></div>
-                        <div id="math-formula-2" class="text-lg text-slate-800 mb-4 relative z-10 font-medium"></div>
-                        <div class="relative z-10 bg-white/60 backdrop-blur-md border border-white shadow-sm rounded-2xl p-4 my-6 text-center">
-                            <div id="math-formula-3" class="text-xl font-bold text-blue-900"></div>
+            <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+                <div class="flex justify-between items-end mb-2">
+                    <h2 class="text-xs text-blue-400 font-bold tracking-widest">📍 业务功能节点 (可拖拽)</h2>
+                </div>
+                <div id="node-list" class="flex flex-col gap-2">
+                    <!-- 动态生成节点列表 -->
+                </div>
+                
+                <!-- 自定义节点创建 -->
+                <div class="border-t border-blue-500/20 pt-4 mt-2">
+                    <h2 class="text-xs text-blue-400 font-bold tracking-widest mb-3">➕ 创建自定义节点</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">节点名称</label>
+                            <input type="text" id="newNodeName" placeholder="输入节点名称" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
                         </div>
-                        <div id="math-desc" class="mt-2 relative z-10 leading-relaxed"></div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">节点类型</label>
+                            <select id="newNodeType" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                <option value="Public">公共区域 (Public)</option>
+                                <option value="Clean">清洁区 (Clean)</option>
+                                <option value="Sterile">无菌区 (Sterile)</option>
+                                <option value="Dirty">污染区 (Dirty)</option>
+                            </select>
+                        </div>
+                        <button onclick="createCustomNode()" class="w-full bg-blue-500/20 border border-blue-500/50 text-blue-300 hover:bg-blue-500/30 rounded py-2 text-xs font-bold transition">
+                            🎯 创建并放置节点
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </aside>
 
-    <!-- 第二部分：物理距离与惩罚成本沙盒 -->
-    <section class="mb-12 liquid-glass p-1 md:p-8 rounded-[2rem] relative z-10">
-        <div class="absolute top-0 left-8 w-16 h-1 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-b-full opacity-70"></div>
-        
-        <div class="p-5 md:p-0">
-            <h2 class="text-xl md:text-2xl font-bold mb-3 text-slate-800 flex items-center">
-                <span class="bg-white/50 border border-white shadow-sm text-teal-600 w-10 h-10 rounded-full flex items-center justify-center mr-4 text-base backdrop-blur-md">2</span>
-                A* 动线物理评估沙盒
-            </h2>
-            <p class="mb-8 text-slate-600 text-base md:text-lg max-w-4xl leading-relaxed">
-                实时 A* 寻路。总流线成本 = $\sum (业务权重 \times 避障最短物理距离)$。<br>
-                <span class="inline-flex items-center mt-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-700 rounded-full text-sm font-semibold">
-                    👉 互动指南：拖拽下方新增的科室节点，或使用建墙工具，观察避障路径与成本变化。
-                </span>
-            </p>
-
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                <!-- 画布操作区 -->
-                <div class="xl:col-span-2 flex flex-col">
-                    <div class="flex flex-wrap items-center justify-between mb-6 liquid-glass-inner p-2.5 rounded-2xl gap-3">
-                        <div class="flex space-x-2 flex-1 min-w-[240px]">
-                            <button id="tool-move" class="tool-btn flex-1 py-2.5 px-3 text-sm md:text-base rounded-xl font-semibold bg-white/80 text-blue-600 shadow-sm border border-white/60" onclick="setMode('move')">🖐️ 移动</button>
-                            <button id="tool-build" class="tool-btn flex-1 py-2.5 px-3 text-slate-600 font-medium text-sm md:text-base rounded-xl hover:bg-white/50 border border-transparent" onclick="setMode('build')">🧱 建墙</button>
-                            <button id="tool-erase" class="tool-btn flex-1 py-2.5 px-3 text-slate-600 font-medium text-sm md:text-base rounded-xl hover:bg-white/50 border border-transparent" onclick="setMode('erase')">🧽 拆墙</button>
-                        </div>
-                        <div class="w-px h-8 bg-slate-300/50 hidden sm:block"></div>
-                        <div class="flex space-x-2">
-                            <button class="px-4 py-2.5 text-sm font-semibold text-red-600 bg-red-100/50 hover:bg-red-100 border border-red-200/50 rounded-xl transition" onclick="clearWalls()">清空墙体</button>
-                            <button class="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white/40 hover:bg-white/70 border border-white/50 shadow-sm rounded-xl transition" onclick="presetLayout('A')">重置布局 A</button>
-                        </div>
-                    </div>
-                    
-                    <div class="interactive-canvas-wrapper">
-                        <canvas id="gridCanvas" width="2000" height="2000" class="w-full block"></canvas>
-                    </div>
-                    
-                    <div class="mt-5 flex flex-wrap gap-4 text-sm text-slate-600 font-medium justify-center px-4 py-2 liquid-glass-inner rounded-full w-fit mx-auto">
-                        <span class="flex items-center"><span class="w-3.5 h-3.5 bg-slate-400/80 rounded border border-slate-500 mr-2 shadow-inner"></span> 承重墙</span>
-                        <span class="flex items-center"><span class="w-3.5 h-3.5 rounded-full bg-red-500 border-2 border-white mr-2 shadow-sm"></span> 节点</span>
-                        <span class="flex items-center"><span class="w-5 h-1 border-b-[3px] border-dashed border-red-400 mr-2"></span> 动线</span>
-                    </div>
+        <!-- 中央沙盘 -->
+        <section class="flex-1 relative bg-darker overflow-hidden flex flex-col" id="canvas-wrapper">
+            <!-- 浮动数据仪表盘 -->
+            <div class="absolute top-4 left-4 flex gap-4 z-10 pointer-events-none">
+                <div class="cyber-panel px-4 py-2 rounded border border-blue-500/30">
+                    <div class="text-[10px] text-blue-400 uppercase">总动线延展长度</div>
+                    <div class="text-2xl font-mono font-bold text-white" id="stat-length">0<span class="text-sm text-slate-400 ml-1">m</span></div>
                 </div>
-
-                <!-- 数据展示面板 -->
-                <div class="flex flex-col h-full gap-6">
-                    <div class="relative overflow-hidden rounded-3xl p-8 text-center" style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%); backdrop-filter: blur(10px); border: 1px solid rgba(20, 184, 166, 0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.02), inset 0 2px 0 rgba(255,255,255,0.6);">
-                        <div class="absolute -right-8 -top-8 w-24 h-24 bg-teal-300/40 rounded-full blur-2xl"></div>
-                        <div class="absolute -left-8 -bottom-8 w-24 h-24 bg-emerald-300/30 rounded-full blur-2xl"></div>
-                        
-                        <div class="text-sm text-teal-800 mb-3 font-bold tracking-widest uppercase relative z-10 opacity-80">当前系统总成本</div>
-                        <div class="flex justify-center items-baseline relative z-10">
-                            <span id="total-cost" class="text-7xl font-black text-teal-700 tabular-nums tracking-tighter transition-all duration-300 drop-shadow-sm">0</span>
-                            <span class="text-teal-600/80 ml-2 font-bold text-xl">pt</span>
-                        </div>
-                    </div>
-
-                    <div class="liquid-glass-inner rounded-3xl flex-1 overflow-hidden flex flex-col border border-white/40">
-                        <div class="bg-white/40 p-4 border-b border-white/50 text-sm font-bold text-slate-800 backdrop-blur-md">流线分析实时报表</div>
-                        <div class="overflow-x-auto overflow-y-auto no-scrollbar flex-1 max-h-[400px]">
-                            <table class="w-full text-sm">
-                                <thead class="sticky top-0 z-10">
-                                    <tr>
-                                        <th class="text-left pl-6">业务动线 (i → j)</th>
-                                        <th>权重</th>
-                                        <th>步数</th>
-                                        <th class="pr-6">成本</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cost-tbody" class="divide-y divide-white/20">
-                                    <!-- JS 动态填充 -->
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="cyber-panel px-4 py-2 rounded border border-blue-500/30">
+                    <div class="text-[10px] text-blue-400 uppercase">院感合规状态</div>
+                    <div class="text-2xl font-mono font-bold text-emerald-400 flex items-center gap-2" id="stat-status">
+                        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div> PASS
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- 第三部分：动态参数配置 (新增) -->
-    <section class="liquid-glass p-1 md:p-8 rounded-[2rem] relative z-10 mb-10">
-        <div class="absolute top-0 left-8 w-16 h-1 bg-gradient-to-r from-purple-400 to-pink-500 rounded-b-full opacity-70"></div>
-        <div class="p-5 md:p-0">
-            <h2 class="text-xl md:text-2xl font-bold mb-8 text-slate-800 flex items-center">
-                <span class="bg-white/50 border border-white shadow-sm text-purple-600 w-10 h-10 rounded-full flex items-center justify-center mr-4 text-base backdrop-blur-md">3</span>
-                系统参数实时控制台
-            </h2>
+            <!-- Canvas 容器 -->
+            <div id="canvas-container" class="flex-1 w-full h-full relative">
+                <canvas id="simCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+            </div>
+        </section>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- 模块：科室管理 -->
-                <div class="liquid-glass-inner p-6 rounded-3xl flex flex-col border border-white/40">
-                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center">
-                        <span class="text-xl mr-2">🏥</span> 科室 (节点) 管理
-                    </h3>
-                    
-                    <!-- 添加表单 -->
-                    <div class="flex gap-2 mb-4 bg-white/30 p-3 rounded-2xl border border-white/50">
-                        <input type="text" id="new-node-name" placeholder="输入科室名称 (如: 药房)" class="glass-input px-3 py-2 rounded-xl flex-1 text-sm">
-                        <div class="relative flex items-center">
-                            <input type="color" id="new-node-color" value="#8b5cf6" class="w-9 h-9 rounded-xl cursor-pointer bg-transparent">
-                        </div>
-                        <button onclick="addNode()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl font-semibold text-sm transition shadow-sm border border-purple-400">添加</button>
-                    </div>
-
-                    <!-- 科室列表 -->
-                    <div class="overflow-y-auto no-scrollbar flex-1 max-h-[300px] rounded-2xl border border-white/30 bg-white/20">
-                        <table class="w-full text-sm">
-                            <thead class="sticky top-0 z-10">
-                                <tr>
-                                    <th class="text-left pl-4">ID</th>
-                                    <th class="text-left">科室名称</th>
-                                    <th>颜色</th>
-                                    <th class="pr-4">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="nodes-tbody" class="divide-y divide-white/20">
-                                <!-- 动态渲染 -->
-                            </tbody>
-                        </table>
-                    </div>
+        <!-- 右侧面板：业务管线与合规审计 -->
+        <aside class="w-96 cyber-panel border-l border-blue-500/30 flex flex-col z-10 shrink-0">
+            <!-- 管线定义区 -->
+            <div class="p-5 border-b border-blue-500/20 h-1/2 flex flex-col">
+                <h2 class="text-xs text-blue-400 font-bold tracking-widest mb-4">🔗 跨区流线并发任务</h2>
+                <div class="flex-1 overflow-y-auto no-scrollbar" id="flow-list">
+                    <!-- 管线任务动态生成 -->
                 </div>
-
-                <!-- 模块：流线规则管理 -->
-                <div class="liquid-glass-inner p-6 rounded-3xl flex flex-col border border-white/40">
-                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center">
-                        <span class="text-xl mr-2">🛤️</span> 流线 (权重) 规则管理
-                    </h3>
-                    
-                    <!-- 添加表单 -->
-                    <div class="flex flex-wrap gap-2 mb-4 bg-white/30 p-3 rounded-2xl border border-white/50 items-center">
-                        <select id="new-path-from" class="glass-input px-2 py-2 rounded-xl flex-1 text-sm min-w-[80px]">
-                            <!-- 动态渲染选项 -->
-                        </select>
-                        <span class="text-slate-400 font-bold">→</span>
-                        <select id="new-path-to" class="glass-input px-2 py-2 rounded-xl flex-1 text-sm min-w-[80px]">
-                        </select>
-                        <input type="number" id="new-path-weight" placeholder="权重(1-20)" min="1" max="20" value="5" class="glass-input w-24 px-3 py-2 rounded-xl text-sm">
-                        <button onclick="addPath()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold text-sm transition shadow-sm border border-blue-400 w-full sm:w-auto mt-2 sm:mt-0">建立连接</button>
-                    </div>
-
-                    <!-- 规则列表 -->
-                    <div class="overflow-y-auto no-scrollbar flex-1 max-h-[300px] rounded-2xl border border-white/30 bg-white/20">
-                        <table class="w-full text-sm">
-                            <thead class="sticky top-0 z-10">
-                                <tr>
-                                    <th class="text-left pl-4">起点 → 终点</th>
-                                    <th>权重</th>
-                                    <th class="pr-4">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rules-tbody" class="divide-y divide-white/20">
-                                <!-- 动态渲染 -->
-                            </tbody>
-                        </table>
+                
+                <!-- 自定义流线创建 -->
+                <div class="border-t border-blue-500/20 pt-4 mt-2">
+                    <h2 class="text-xs text-blue-400 font-bold tracking-widest mb-3">➕ 创建自定义流线</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">流线类型</label>
+                            <select id="newFlowRole" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                <option value="PATIENT">患者流</option>
+                                <option value="STAFF">医护流</option>
+                                <option value="CLEAN">洁净物流</option>
+                                <option value="WASTE">污废流</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">起点节点</label>
+                            <select id="newFlowFrom" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                <!-- 动态生成选项 -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">终点节点</label>
+                            <select id="newFlowTo" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                <!-- 动态生成选项 -->
+                            </select>
+                        </div>
+                        <button onclick="createCustomFlow()" class="w-full bg-blue-500/20 border border-blue-500/50 text-blue-300 hover:bg-blue-500/30 rounded py-2 text-xs font-bold transition">
+                            🚀 创建流线
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+
+            <!-- 实时合规审计日志 -->
+            <div class="p-0 flex-1 flex flex-col bg-black/40">
+                <div class="px-5 py-3 border-b border-blue-500/20 flex justify-between items-center bg-darker/50">
+                    <h2 class="text-xs text-blue-400 font-bold tracking-widest">🛡️ 实时院感合规审计</h2>
+                    <span class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/50">Engine Active</span>
+                </div>
+                <div id="audit-log" class="flex-1 overflow-y-auto p-4 flex flex-col gap-2 font-mono text-xs">
+                    <!-- 日志内容 -->
+                    <div class="text-slate-500 italic">等待系统启动推演...</div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
 
 <script>
     // ==========================================
-    // 全局可变数据与配置
+    // 系统配置与状态模型
     // ==========================================
-    let nodesInfo = {
-        'N1': { name: '分诊 Triage', color: '#94a3b8' },
-        'N2': { name: '抢救 Resus', color: '#ef4444' },
-        'N3': { name: '急诊CT', color: '#3b82f6' },
-        'N4': { name: '导管室 Cath', color: '#f59e0b' },
-        'N5': { name: '检验科 Lab', color: '#10b981' } 
+    const ROLES = {
+        PATIENT: { id: 'PATIENT', name: '患者流', color: '#10b981', glow: 'rgba(16, 185, 129, 0.4)' },
+        STAFF:   { id: 'STAFF',   name: '医护流', color: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)' },
+        CLEAN:   { id: 'CLEAN',   name: '洁净物流', color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.4)' },
+        WASTE:   { id: 'WASTE',   name: '污废流', color: '#ef4444', glow: 'rgba(239, 68, 68, 0.4)' }
     };
 
-    let weightMatrix = [
-        { from: 'N2', to: 'N4', w: 10, desc: '抢救 → 导管' },
-        { from: 'N2', to: 'N3', w: 8,  desc: '抢救 → CT' },
-        { from: 'N2', to: 'N5', w: 6,  desc: '抢救 → 检验' },
-        { from: 'N3', to: 'N4', w: 5,  desc: 'CT → 导管' },
-        { from: 'N3', to: 'N5', w: 4,  desc: 'CT → 检验' },
-        { from: 'N4', to: 'N5', w: 3,  desc: '导管 → 检验' },
-        { from: 'N2', to: 'N1', w: 2,  desc: '抢救 → 分诊' }
+    // 医院科室预设节点数据
+    let nodes = {
+        'P1': { id: 'P1', name: '门诊大门', type: 'Public', x: 10, y: 10 },
+        'P2': { id: 'P2', name: '预检分诊', type: 'Public', x: 20, y: 10 },
+        'D1': { id: 'D1', name: '医护通道', type: 'Clean', x: 10, y: 30 },
+        'D2': { id: 'D2', name: '更衣/缓冲区', type: 'Clean', x: 20, y: 30 },
+        'O1': { id: 'O1', name: '核心手术室', type: 'Sterile', x: 40, y: 20 },
+        'W1': { id: 'W1', name: '污洗间', type: 'Dirty', x: 40, y: 40 },
+        'W2': { id: 'W2', name: '污物暂存/专梯', type: 'Dirty', x: 60, y: 40 },
+        'C1': { id: 'C1', name: '中心供应室', type: 'Clean', x: 60, y: 10 }
+    };
+
+    // 并发业务流线需求
+    let flows = [
+        { id: 'f1', role: 'PATIENT', from: 'P1', to: 'P2', active: true },
+        { id: 'f2', role: 'PATIENT', from: 'P2', to: 'O1', active: true },
+        { id: 'f3', role: 'STAFF',   from: 'D1', to: 'D2', active: true },
+        { id: 'f4', role: 'STAFF',   from: 'D2', to: 'O1', active: true },
+        { id: 'f5', role: 'CLEAN',   from: 'C1', to: 'O1', active: true },
+        { id: 'f6', role: 'WASTE',   from: 'O1', to: 'W1', active: true },
+        { id: 'f7', role: 'WASTE',   from: 'W1', to: 'W2', active: true },
     ];
 
-    let gridNodes = {};
-    let nextNodeIdCounter = 6; // 用于生成 N6, N7...
-    let isCustomMode = false;  // 是否进入了自定义拓扑模式
-
     // ==========================================
-    // UI 控制台逻辑 (增删改查)
+    // 渲染引擎与物理网格
     // ==========================================
-    function triggerCustomMode() {
-        isCustomMode = true;
-        setTopology('Custom');
-        needsPathUpdate = true;
-    }
-
-    function renderControlUI() {
-        // 1. 渲染科室列表
-        const nodesTbody = document.getElementById('nodes-tbody');
-        nodesTbody.innerHTML = '';
-        const fromSelect = document.getElementById('new-path-from');
-        const toSelect = document.getElementById('new-path-to');
-        fromSelect.innerHTML = ''; toSelect.innerHTML = '';
-
-        for (let id in nodesInfo) {
-            const info = nodesInfo[id];
-            
-            // 表格行
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-white/40 transition-colors';
-            tr.innerHTML = `
-                <td class="text-left pl-4 font-bold text-slate-700">${id}</td>
-                <td class="text-left font-medium text-slate-600">${info.name}</td>
-                <td><span class="inline-block w-4 h-4 rounded-full shadow-sm border border-white" style="background:${info.color}"></span></td>
-                <td class="pr-4">
-                    <button onclick="deleteNode('${id}')" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition" title="删除">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                </td>
-            `;
-            nodesTbody.appendChild(tr);
-
-            // 下拉选项
-            const optionHTML = `<option value="${id}">${id} - ${info.name.split(' ')[0]}</option>`;
-            fromSelect.innerHTML += optionHTML;
-            toSelect.innerHTML += optionHTML;
-        }
-        if(Object.keys(nodesInfo).length > 1) {
-            toSelect.selectedIndex = 1; // 默认错开
-        }
-
-        // 2. 渲染规则列表
-        const rulesTbody = document.getElementById('rules-tbody');
-        rulesTbody.innerHTML = '';
-        weightMatrix.forEach((wm, index) => {
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-white/40 transition-colors';
-            tr.innerHTML = `
-                <td class="text-left pl-4 font-medium text-slate-700 flex items-center h-full pt-3">
-                    <span class="w-2 h-2 rounded-full mr-1" style="background:${nodesInfo[wm.from]?.color || '#000'}"></span>${wm.from} 
-                    <span class="mx-2 text-slate-400">→</span> 
-                    <span class="w-2 h-2 rounded-full mr-1" style="background:${nodesInfo[wm.to]?.color || '#000'}"></span>${wm.to}
-                </td>
-                <td><span class="px-2 py-0.5 bg-white/60 rounded text-xs font-bold border border-white/40">${wm.w}</span></td>
-                <td class="pr-4">
-                    <button onclick="deletePath(${index})" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition" title="删除">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </td>
-            `;
-            rulesTbody.appendChild(tr);
-        });
-    }
-
-    function addNode() {
-        const nameInput = document.getElementById('new-node-name');
-        const colorInput = document.getElementById('new-node-color');
-        const name = nameInput.value.trim() || '新科室';
-        const color = colorInput.value;
-        const newId = 'N' + (nextNodeIdCounter++);
-
-        nodesInfo[newId] = { name: name, color: color };
-        // 放在沙盒中心附近
-        gridNodes[newId] = { x: 100 + Math.floor(Math.random()*20 - 10), y: 100 + Math.floor(Math.random()*20 - 10) };
-        
-        nameInput.value = ''; // 清空
-        triggerCustomMode();
-        renderControlUI();
-    }
-
-    function deleteNode(id) {
-        if(Object.keys(nodesInfo).length <= 1) return; // 保留最后一个
-
-        delete nodesInfo[id];
-        delete gridNodes[id];
-        
-        // 联动清理流线
-        weightMatrix = weightMatrix.filter(wm => wm.from !== id && wm.to !== id);
-        
-        triggerCustomMode();
-        renderControlUI();
-    }
-
-    function addPath() {
-        const from = document.getElementById('new-path-from').value;
-        const to = document.getElementById('new-path-to').value;
-        const w = parseInt(document.getElementById('new-path-weight').value) || 1;
-
-        if(!from || !to || from === to) return;
-
-        // 检查是否存在，若存在则更新
-        const existingIdx = weightMatrix.findIndex(wm => wm.from === from && wm.to === to);
-        const desc = `${nodesInfo[from].name.split(' ')[0]} → ${nodesInfo[to].name.split(' ')[0]}`;
-        
-        if (existingIdx >= 0) {
-            weightMatrix[existingIdx].w = w;
-        } else {
-            weightMatrix.push({ from, to, w, desc });
-        }
-        
-        triggerCustomMode();
-        renderControlUI();
-    }
-
-    function deletePath(index) {
-        weightMatrix.splice(index, 1);
-        triggerCustomMode();
-        renderControlUI();
-    }
-
-    // ==========================================
-    // 第一部分：拓扑可视化逻辑 (加入自定义环形布局)
-    // ==========================================
-    let currentTopo = 'B';
-    const topoCanvas = document.getElementById('topologyCanvas');
-    const topoCtx = topoCanvas.getContext('2d');
-    let topoPulsePhase = 0;
-
-    const predefinedTopoPos = {
-        'A': { N2: [200, 150], N1: [100, 50], N3: [300, 50], N4: [300, 250], N5: [100, 250] },
-        'B': { N2: [200, 150], N1: [100, 50], N3: [300, 50], N4: [300, 250], N5: [100, 250] }
-    };
-
-    function setTopology(type) {
-        currentTopo = type;
-        
-        const btnA = document.getElementById('btn-topo-A');
-        const btnB = document.getElementById('btn-topo-B');
-        const btnC = document.getElementById('btn-topo-Custom');
-        const activeClass = "flex-1 py-2.5 rounded-xl shadow-md bg-white/80 text-blue-600 font-bold backdrop-blur border border-white/50 transition-all";
-        const inactiveClass = "flex-1 py-2.5 rounded-xl text-slate-600 font-medium hover:bg-white/40 backdrop-blur border border-transparent transition-all";
-        
-        btnA.className = inactiveClass;
-        btnB.className = inactiveClass;
-        btnC.className = "flex-1 py-2.5 rounded-xl text-slate-600 font-medium opacity-50 cursor-not-allowed transition-all hidden";
-        
-        if (type === 'A') btnA.className = activeClass;
-        else if (type === 'B') btnB.className = activeClass;
-        else {
-            btnC.classList.remove('hidden', 'opacity-50', 'cursor-not-allowed');
-            btnC.className = "flex-1 py-2.5 rounded-xl shadow-md bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold transition-all";
-            btnA.classList.add('opacity-50'); btnB.classList.add('opacity-50');
-        }
-
-        // KaTeX 描述更新
-        if (typeof katex !== 'undefined') {
-            const el1 = document.getElementById('math-formula-1');
-            const el2 = document.getElementById('math-formula-2');
-            const el3 = document.getElementById('math-formula-3');
-            const desc = document.getElementById('math-desc');
-
-            if (type === 'A') {
-                katex.render("k_2 = 4 \\text{ (邻居数)}", el1, {throwOnError: false});
-                katex.render("e_2 = 0 \\text{ (邻居间无通道)}", el2, {throwOnError: false});
-                katex.render("C_2 = \\frac{2 \\times 0}{4(4-1)} = 0", el3, {throwOnError: false, displayMode: true});
-                desc.innerHTML = `<div class="text-sm text-slate-700 bg-red-50/50 p-3 rounded-xl border border-red-100/50">聚类系数为 0。极易造成抢救区拥堵。</div>`;
-            } else if (type === 'B') {
-                katex.render("k_2 = 4", el1, {throwOnError: false});
-                katex.render("e_2 = 3 \\text{ (新增通道)}", el2, {throwOnError: false});
-                katex.render("C_2 = \\frac{6}{12} = 0.5", el3, {throwOnError: false, displayMode: true});
-                desc.innerHTML = `<div class="text-sm text-slate-700 bg-teal-50/50 p-3 rounded-xl border border-teal-100/50">聚类系数为 0.5。医技区形成内部环路，释放抢救区压力。</div>`;
-            } else {
-                el1.innerHTML = ''; el2.innerHTML = ''; el3.innerHTML = '';
-                desc.innerHTML = `<div class="text-sm text-purple-700 bg-purple-50/50 p-3 rounded-xl border border-purple-200/50"><span class="font-bold">✨ 自定义模式已激活：</span>上方拓扑图已切换为环形自动布局，连线实时反映控制台规则。</div>`;
-            }
-        }
-    }
-
-    function renderTopologyFrame() {
-        topoCtx.clearRect(0, 0, topoCanvas.width, topoCanvas.height);
-        topoPulsePhase += 0.05;
-        
-        let pos = {};
-        let edges = [];
-
-        if (currentTopo === 'Custom') {
-            // 环形布局
-            const nodeIds = Object.keys(nodesInfo);
-            const n = nodeIds.length;
-            const cx = 200, cy = 150, r = 100;
-            nodeIds.forEach((id, i) => {
-                const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
-                pos[id] = [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
-            });
-            // 边直接取自 weightMatrix
-            weightMatrix.forEach(wm => {
-                if(pos[wm.from] && pos[wm.to]) edges.push([wm.from, wm.to, wm.w]);
-            });
-        } else {
-            pos = predefinedTopoPos[currentTopo] || predefinedTopoPos['B'];
-            const eA = [['N1','N2'], ['N3','N2'], ['N4','N2'], ['N5','N2']];
-            const eB = [['N1','N2'], ['N3','N2'], ['N4','N2'], ['N5','N2'], ['N3','N4'], ['N4','N5'], ['N3','N5']];
-            edges = currentTopo === 'A' ? eA : eB;
-        }
-
-        // 绘制边
-        edges.forEach(edge => {
-            const p1 = pos[edge[0]], p2 = pos[edge[1]];
-            topoCtx.beginPath();
-            topoCtx.moveTo(p1[0], p1[1]);
-            topoCtx.lineTo(p2[0], p2[1]);
-            
-            if(currentTopo === 'Custom') {
-                // 自定义模式下按权重显色
-                const w = edge[2];
-                topoCtx.lineWidth = Math.max(1, w/2);
-                topoCtx.strokeStyle = w >= 8 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(148, 163, 184, 0.5)';
-            } else {
-                // 预设模式下的特殊虚线
-                if(currentTopo === 'B' && !['N1','N2','N3','N4','N5'].includes(edge[0]+edge[1])) {
-                    // 判断是否是辅助边 (简略判断)
-                    if(edge[0]!=='N2' && edge[1]!=='N2') {
-                        topoCtx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
-                        topoCtx.lineWidth = 3;
-                        topoCtx.lineDashOffset = -topoPulsePhase * 10;
-                        topoCtx.setLineDash([8, 6]);
-                    } else {
-                        topoCtx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
-                        topoCtx.lineWidth = 3;
-                        topoCtx.setLineDash([]);
-                    }
-                } else {
-                    topoCtx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
-                    topoCtx.lineWidth = 3;
-                    topoCtx.setLineDash([]);
-                }
-            }
-            topoCtx.stroke();
-            topoCtx.setLineDash([]); // 重置
-        });
-
-        // 绘制节点
-        Object.keys(pos).forEach(id => {
-            const p = pos[id];
-            const info = nodesInfo[id];
-            if(!info) return;
-
-            if(id === 'N2' && currentTopo !== 'Custom') {
-                topoCtx.beginPath();
-                topoCtx.arc(p[0], p[1], 28 + Math.sin(topoPulsePhase) * 4, 0, Math.PI * 2);
-                topoCtx.fillStyle = 'rgba(239, 68, 68, 0.2)';
-                topoCtx.fill();
-            }
-
-            topoCtx.beginPath();
-            topoCtx.arc(p[0], p[1], 20, 0, Math.PI * 2);
-            topoCtx.fillStyle = info.color;
-            topoCtx.shadowColor = 'rgba(0,0,0,0.2)';
-            topoCtx.shadowBlur = 4;
-            topoCtx.shadowOffsetY = 2;
-            topoCtx.fill();
-            topoCtx.shadowColor = 'transparent';
-
-            topoCtx.strokeStyle = '#fff';
-            topoCtx.lineWidth = 3;
-            topoCtx.stroke();
-
-            topoCtx.fillStyle = '#1e293b';
-            topoCtx.font = '500 12px Inter, sans-serif';
-            topoCtx.textAlign = 'center';
-            const shortName = info.name.split(' ')[0];
-            // 防止长名字遮挡
-            topoCtx.fillText(shortName.substring(0,4), p[0], p[1] - 28); 
-            topoCtx.fillStyle = '#fff';
-            topoCtx.font = 'bold 15px sans-serif';
-            topoCtx.fillText(id, p[0], p[1] + 5);
-        });
-    }
-
-    // ==========================================
-    // 第二部分：沙盒网格与 A* 寻路引擎 (保持核心不变)
-    // ==========================================
-    const gridCanvas = document.getElementById('gridCanvas');
-    const gridCtx = gridCanvas.getContext('2d');
-    const cols = 200, rows = 200, cellSize = 10; 
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const CELL_SIZE = 15; // 每个网格的像素尺寸
+    let cols = 0, rows = 0;
+    let grid = []; // 0: 空地, 1: 墙体
     
-    let grid = Array(cols).fill().map(() => Array(rows).fill(0));
-    let currentMode = 'move'; 
+    // 交互状态
+    let currentMode = 'move'; // move | build | erase
     let isInteracting = false;
     let draggingNodeId = null;
-    let needsPathUpdate = true;
+    let lastGridPos = null; // 用于连续建墙的 Bresenham 算法
+
+    // 寻路结果与碰撞数据
     let computedPaths = []; 
-    let animationOffset = 0; 
-    let currentTotalCost = 0;
-    let displayedCost = 0; 
+    let collisions = []; // 记录交叉感染的空间坐标
+    let animationOffset = 0;
+    let needsUpdate = true;
+    let previousCollisionCount = -1;
+    
+    // 底图相关变量
+    let backgroundImage = null;
+    let backgroundImageOpacity = 0.7;
+    let placingNode = false;
+    let newNodeData = null;
+    
+    // 画布变换状态
+    let canvasTransform = {
+        scale: 1,
+        offsetX: 0,
+        offsetY: 0,
+        isDragging: false,
+        lastMouseX: 0,
+        lastMouseY: 0
+    };
+    
+    // 底图数据 (用于导出)
+    let backgroundImageData = null;
 
-    function setMode(mode) {
-        currentMode = mode;
-        const activeClasses = ['bg-white/80', 'text-blue-600', 'shadow-sm', 'border-white/60', 'font-semibold'];
-        const inactiveClasses = ['text-slate-600', 'hover:bg-white/50', 'border-transparent', 'font-medium'];
+    // 初始化尺寸与网格
+    function initCanvas() {
+        const wrapper = document.getElementById('canvas-wrapper');
+        // 防御性处理尺寸，确保宽高不为 0
+        const cw = Math.max(wrapper.clientWidth, 100);
+        const ch = Math.max(wrapper.clientHeight, 100);
+        canvas.width = cw;
+        canvas.height = ch;
+        cols = Math.floor(cw / CELL_SIZE);
+        rows = Math.floor(ch / CELL_SIZE);
 
-        ['move', 'build', 'erase'].forEach(m => {
-            const btn = document.getElementById(`tool-${m}`);
-            if (m === mode) { btn.classList.remove(...inactiveClasses); btn.classList.add(...activeClasses); } 
-            else { btn.classList.remove(...activeClasses); btn.classList.add(...inactiveClasses); }
-        });
-        updateCursor(null);
+        // 维持墙体数据或初始化新网格
+        let newGrid = Array(cols).fill().map(() => Array(rows).fill(0));
+        
+        // 安全地迁移旧网格数据
+        if (grid && grid.length > 0) {
+            for(let i=0; i<Math.min(grid.length, cols); i++) {
+                if (!grid[i]) continue; // 安全检查：防止原数组为空洞
+                for(let j=0; j<Math.min(grid[i].length, rows); j++) {
+                    newGrid[i][j] = grid[i][j];
+                }
+            }
+        }
+        grid = newGrid;
+        
+        // 预设一面墙，增加初始趣味性 (加入了严格的防御性数组检查)
+        if(grid.length > 0 && grid.every(col => col && col.length > 0 && col.every(val => val === 0))) {
+            for(let j=5; j<35; j++) {
+                if(j !== 20 && j < rows) { // 留个门，同时确保在画布高度内
+                    if (grid[30]) grid[30][j] = 1; // 彻底避免 undefined 设置
+                    if (grid[31]) grid[31][j] = 1;
+                }
+            }
+            for(let i=30; i<50; i++) {
+                if (grid[i] && 35 < rows) { // 确保在画布宽高内
+                    grid[i][35] = 1;
+                }
+            }
+        }
+        needsUpdate = true;
     }
 
-    function presetLayout(type) {
-        grid = Array(cols).fill().map(() => Array(rows).fill(0));
-        isCustomMode = false;
+    // 底图相关功能
+    function setupBackgroundImageHandling() {
+        const fileInput = document.getElementById('backgroundImage');
+        const opacitySlider = document.getElementById('imageOpacity');
+        const opacityValue = document.getElementById('opacityValue');
         
-        // 重置为基础数据
-        nodesInfo = {
-            'N1': { name: '分诊 Triage', color: '#94a3b8' },
-            'N2': { name: '抢救 Resus', color: '#ef4444' },
-            'N3': { name: '急诊CT', color: '#3b82f6' },
-            'N4': { name: '导管室 Cath', color: '#f59e0b' },
-            'N5': { name: '检验科 Lab', color: '#10b981' } 
-        };
-        weightMatrix = [
-            { from: 'N2', to: 'N4', w: 10, desc: '抢救 → 导管' }, { from: 'N2', to: 'N3', w: 8,  desc: '抢救 → CT' },
-            { from: 'N2', to: 'N5', w: 6,  desc: '抢救 → 检验' }, { from: 'N3', to: 'N4', w: 5,  desc: 'CT → 导管' },
-            { from: 'N3', to: 'N5', w: 4,  desc: 'CT → 检验' }, { from: 'N4', to: 'N5', w: 3,  desc: '导管 → 检验' },
-            { from: 'N2', to: 'N1', w: 2,  desc: '抢救 → 分诊' }
-        ];
-
-        if (type === 'A') {
-            for(let i=70; i<130; i++) { grid[i][60] = 1; grid[i][140] = 1; }
-            for(let j=60; j<=140; j++) { grid[70][j] = 1; grid[130][j] = 1; }
-            for(let w=0; w<8; w++) {
-                grid[100+w][60] = 0; grid[100-w][60] = 0; grid[100+w][140] = 0; grid[100-w][140] = 0;
-                grid[70][100+w] = 0; grid[70][100-w] = 0; grid[130][100+w] = 0; grid[130][100-w] = 0;
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        backgroundImage = img;
+                        backgroundImageData = event.target.result; // 保存base64数据
+                        addLog('底图已成功加载，请在画布上查看', 'success');
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
             }
-            gridNodes = { 'N1':{x:30,y:30}, 'N2':{x:100,y:100}, 'N3':{x:170,y:30}, 'N4':{x:170,y:170}, 'N5':{x:30,y:170} };
-            setTopology('A');
-        } else if (type === 'B') {
-            for(let i=60; i<150; i++) { grid[i][40] = 1; }
-            for(let j=40; j<120; j++) { grid[60][j] = 1; }
-            for(let w=0; w<10; w++) { grid[100+w][40] = 0; grid[100-w][40] = 0; grid[60][80+w] = 0; grid[60][80-w] = 0; }
-            gridNodes = { 'N1':{x:100,y:20}, 'N2':{x:100,y:70}, 'N3':{x:130,y:70}, 'N4':{x:130,y:100}, 'N5':{x:80,y:100} };
-            setTopology('B');
-        }
-        renderControlUI();
-        needsPathUpdate = true;
+        });
+        
+        opacitySlider.addEventListener('input', function(e) {
+            backgroundImageOpacity = parseInt(e.target.value) / 100;
+            opacityValue.textContent = e.target.value + '%';
+        });
+    }
+
+    function removeBackgroundImage() {
+        backgroundImage = null;
+        backgroundImageData = null;
+        document.getElementById('backgroundImage').value = '';
+        addLog('底图已移除', 'info');
+    }
+
+    window.addEventListener('resize', () => { initCanvas(); });
+
+    // ==========================================
+    // UI 控制器同步
+    // ==========================================
+    function setMode(mode) {
+        currentMode = mode;
+        const btns = ['move', 'build', 'erase'];
+        btns.forEach(b => {
+            const el = document.getElementById(`tool-${b}`);
+            if(b === mode) {
+                el.classList.add('active', 'text-white');
+                el.classList.remove('text-slate-300');
+                el.style.color = '#3b82f6';
+            } else {
+                el.classList.remove('active', 'text-white');
+                el.classList.add('text-slate-300');
+                el.style.color = '';
+            }
+        });
+        canvas.style.cursor = mode === 'move' ? 'grab' : (mode === 'build' ? 'cell' : 'not-allowed');
     }
 
     function clearWalls() {
         grid = Array(cols).fill().map(() => Array(rows).fill(0));
-        needsPathUpdate = true;
+        needsUpdate = true;
     }
 
+    function renderUI() {
+        // 渲染左侧节点列表
+        const nodeListEl = document.getElementById('node-list');
+        nodeListEl.innerHTML = '';
+        Object.values(nodes).forEach(n => {
+            nodeListEl.innerHTML += `
+                <div class="bg-darker/60 border border-slate-700/50 p-3 rounded flex items-center justify-between hover:border-blue-500/50 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center font-bold text-xs text-white">
+                            ${n.id}
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-200">${n.name}</div>
+                            <div class="text-[10px] text-slate-500 font-mono">X:${n.x} Y:${n.y} | ${n.type}</div>
+                        </div>
+                    </div>
+                    <button onclick="deleteNode('${n.id}')" class="text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2 rounded-full transition">
+                        🗑️
+                    </button>
+                </div>
+            `;
+        });
+
+        // 渲染右侧流线列表
+        const flowListEl = document.getElementById('flow-list');
+        flowListEl.innerHTML = '';
+        flows.forEach(f => {
+            const r = ROLES[f.role];
+            // 检查节点是否存在
+            if (!nodes[f.from] || !nodes[f.to]) {
+                return; // 跳过已删除节点的流线
+            }
+            flowListEl.innerHTML += `
+                <div class="mb-2 bg-darker/50 border-l-2 p-2 px-3 flex items-center justify-between group" style="border-color: ${r.color}">
+                    <div class="flex items-center gap-2">
+                        <div class="text-xs font-bold text-white uppercase w-16" style="color: ${r.color}">${r.name}</div>
+                        <div class="flex items-center gap-1 font-mono text-xs text-slate-300">
+                            <span class="bg-slate-800 px-1 rounded">${nodes[f.from].name}</span>
+                            <span class="text-slate-500">→</span>
+                            <span class="bg-slate-800 px-1 rounded">${nodes[f.to].name}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteFlow('${f.id}')" class="text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2 rounded-full transition opacity-0 group-hover:opacity-100">
+                        🗑️
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    function addLog(msg, type = 'info') {
+        const logEl = document.getElementById('audit-log');
+        const time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        
+        let colorClass = 'text-blue-300';
+        let icon = 'ℹ️';
+        if(type === 'error') { colorClass = 'text-red-400 font-bold'; icon = '🚨'; }
+        if(type === 'success') { colorClass = 'text-emerald-400'; icon = '✅'; }
+        if(type === 'warning') { colorClass = 'text-yellow-400'; icon = '⚠️'; }
+
+        const div = document.createElement('div');
+        div.className = `log-entry flex gap-2 ${colorClass}`;
+        div.innerHTML = `<span class="text-slate-600 shrink-0">[${time}]</span> <span class="flex-1">${icon} ${msg}</span>`;
+        logEl.prepend(div);
+
+        // 保持日志数量不过多
+        if(logEl.children.length > 50) logEl.removeChild(logEl.lastChild);
+    }
+
+    // 自定义节点和流线功能
+    function createCustomNode() {
+        const name = document.getElementById('newNodeName').value.trim();
+        const type = document.getElementById('newNodeType').value;
+        
+        if (!name) {
+            addLog('请输入节点名称', 'warning');
+            return;
+        }
+        
+        // 生成新节点ID
+        const nodeIds = Object.keys(nodes).map(id => parseInt(id.slice(1))).filter(num => !isNaN(num));
+        const maxId = nodeIds.length > 0 ? Math.max(...nodeIds) : 0;
+        const newId = `${type.charAt(0)}${maxId + 1}`;
+        
+        // 准备新节点数据
+        newNodeData = {
+            id: newId,
+            name: name,
+            type: type,
+            x: 30, // 默认位置
+            y: 20
+        };
+        
+        placingNode = true;
+        canvas.style.cursor = 'crosshair';
+        addLog(`请在画布上点击放置新节点: ${name}`, 'info');
+        
+        // 清空输入框
+        document.getElementById('newNodeName').value = '';
+    }
+
+    function updateNodeSelectors() {
+        const fromSelect = document.getElementById('newFlowFrom');
+        const toSelect = document.getElementById('newFlowTo');
+        
+        // 清空现有选项
+        fromSelect.innerHTML = '';
+        toSelect.innerHTML = '';
+        
+        // 添加所有节点作为选项
+        Object.values(nodes).forEach(node => {
+            const fromOption = document.createElement('option');
+            fromOption.value = node.id;
+            fromOption.textContent = `${node.id}: ${node.name}`;
+            fromSelect.appendChild(fromOption);
+            
+            const toOption = document.createElement('option');
+            toOption.value = node.id;
+            toOption.textContent = `${node.id}: ${node.name}`;
+            toSelect.appendChild(toOption);
+        });
+    }
+
+    function createCustomFlow() {
+        const role = document.getElementById('newFlowRole').value;
+        const from = document.getElementById('newFlowFrom').value;
+        const to = document.getElementById('newFlowTo').value;
+        
+        if (from === to) {
+            addLog('起点和终点不能相同', 'warning');
+            return;
+        }
+        
+        if (!nodes[from] || !nodes[to]) {
+            addLog('请选择有效的起点和终点', 'warning');
+            return;
+        }
+        
+        // 生成新流线ID
+        const flowIds = Object.keys(flows).map(id => parseInt(id.slice(1))).filter(num => !isNaN(num));
+        const maxId = flowIds.length > 0 ? Math.max(...flowIds) : 0;
+        const newId = `f${maxId + 1}`;
+        
+        // 创建新流线
+        flows.push({
+            id: newId,
+            role: role,
+            from: from,
+            to: to,
+            active: true
+        });
+        
+        addLog(`成功创建新流线: ${ROLES[role].name} (${nodes[from].name} → ${nodes[to].name})`, 'success');
+        needsUpdate = true;
+        renderUI();
+    }
+
+    // 删除节点功能
+    function deleteNode(nodeId) {
+        if (!nodes[nodeId]) {
+            addLog('节点不存在', 'warning');
+            return;
+        }
+        
+        const nodeName = nodes[nodeId].name;
+        
+        // 检查是否有关联的流线
+        const relatedFlows = flows.filter(f => f.from === nodeId || f.to === nodeId);
+        if (relatedFlows.length > 0) {
+            // 删除相关流线
+            relatedFlows.forEach(flow => {
+                const flowIndex = flows.indexOf(flow);
+                if (flowIndex > -1) {
+                    flows.splice(flowIndex, 1);
+                }
+            });
+            addLog(`删除节点 ${nodeName} 时，同时删除了 ${relatedFlows.length} 条相关流线`, 'warning');
+        }
+        
+        // 删除节点
+        delete nodes[nodeId];
+        
+        addLog(`成功删除节点: ${nodeName}`, 'success');
+        needsUpdate = true;
+        renderUI();
+        updateNodeSelectors();
+    }
+
+    // 删除流线功能
+    function deleteFlow(flowId) {
+        const flowIndex = flows.findIndex(f => f.id === flowId);
+        if (flowIndex === -1) {
+            addLog('流线不存在', 'warning');
+            return;
+        }
+        
+        const flow = flows[flowIndex];
+        const flowName = `${ROLES[flow.role].name} (${nodes[flow.from]?.name || '?' } → ${nodes[flow.to]?.name || '?'})`;
+        
+        // 删除流线
+        flows.splice(flowIndex, 1);
+        
+        addLog(`成功删除流线: ${flowName}`, 'success');
+        needsUpdate = true;
+        renderUI();
+    }
+
+
+    // ==========================================
+    // 核心寻路与合规检测算法
+    // ==========================================
+    
+    // 启发式函数 (曼哈顿距离)
     function heuristic(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
 
-    function aStar(start, end) {
+    // 带有角色过滤机制的 A*
+    function aStar(start, end, roleId) {
         let openSet = [start];
         let cameFrom = new Map();
         let gScore = new Map();
@@ -756,220 +694,605 @@
 
             openSet.splice(lowestIdx, 1);
             
+            // 四向移动
             const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
             for (let dir of dirs) {
-                let neighbor = { x: current.x + dir[0], y: current.y + dir[1] };
-                if (neighbor.x < 0 || neighbor.x >= cols || neighbor.y < 0 || neighbor.y >= rows) continue;
-                if (grid[neighbor.x][neighbor.y] === 1) continue; 
+                let nx = current.x + dir[0];
+                let ny = current.y + dir[1];
+                
+                // 边界检测与墙体检测 (增加防御检查 grid[nx])
+                if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
+                if (!grid[nx] || grid[nx][ny] === 1) continue; 
 
+                // 节点阻塞检测：不能穿过其他未相关的物理节点中心
                 let isOtherNode = false;
-                for(let id in gridNodes) {
-                    if(gridNodes[id].x === neighbor.x && gridNodes[id].y === neighbor.y && !(neighbor.x === end.x && neighbor.y === end.y)) {
+                for(let id in nodes) {
+                    if(nodes[id].x === nx && nodes[id].y === ny && !(nx === end.x && ny === end.y) && !(nx === start.x && ny === start.y)) {
                         isOtherNode = true; break;
                     }
                 }
                 if(isOtherNode) continue;
 
                 let tentativeGScore = gScore.get(`${current.x},${current.y}`) + 1;
-                let neighborKey = `${neighbor.x},${neighbor.y}`;
+                let neighborKey = `${nx},${ny}`;
 
                 if (!gScore.has(neighborKey) || tentativeGScore < gScore.get(neighborKey)) {
-                    cameFrom.set(neighborKey, current); gScore.set(neighborKey, tentativeGScore);
-                    fScore.set(neighborKey, tentativeGScore + heuristic(neighbor, end));
-                    if (!openSet.find(n => n.x === neighbor.x && n.y === neighbor.y)) openSet.push(neighbor);
+                    cameFrom.set(neighborKey, current);
+                    gScore.set(neighborKey, tentativeGScore);
+                    fScore.set(neighborKey, tentativeGScore + heuristic({x:nx, y:ny}, end));
+                    if (!openSet.find(n => n.x === nx && n.y === ny)) openSet.push({x:nx, y:ny});
                 }
             }
         }
-        return [];
+        return []; // 无法到达
     }
 
-    function recalculatePaths() {
-        let total = 0;
+    // 引擎核心：重新计算所有动线并进行时空冲突检查
+    function runSimulationEngine() {
         computedPaths = [];
-        const tbody = document.getElementById('cost-tbody');
-        tbody.innerHTML = '';
+        collisions = [];
+        let totalLen = 0;
+        let cellUsage = {}; // 记录每个网格被哪些角色占据
 
-        weightMatrix.forEach(wm => {
-            const startNode = gridNodes[wm.from];
-            const endNode = gridNodes[wm.to];
-            if(!startNode || !endNode) return; // 容错处理
+        flows.forEach(f => {
+            if(!f.active) return;
+            const startNode = nodes[f.from];
+            const endNode = nodes[f.to];
+            if(!startNode || !endNode) return;
 
-            const path = aStar(startNode, endNode);
-            const dist = path.length > 0 ? path.length - 1 : 0;
-            const cost = wm.w * dist;
-            const penaltyCost = dist === 0 ? wm.w * 999 : cost; 
-            total += penaltyCost;
-
-            if (path.length > 0) {
+            const path = aStar(startNode, endNode, f.role);
+            
+            if(path.length > 0) {
+                totalLen += path.length;
                 computedPaths.push({
-                    path: path, weight: wm.w,
-                    color: wm.w >= 8 ? '#ef4444' : (wm.w >= 5 ? '#f59e0b' : '#3b82f6'),
-                    width: wm.w >= 8 ? 8 : (wm.w >= 5 ? 5 : 3),
-                    speed: wm.w >= 8 ? 2.5 : 1.5
+                    id: f.id,
+                    role: f.role,
+                    points: path,
+                    color: ROLES[f.role].color,
+                    glow: ROLES[f.role].glow
                 });
-            }
 
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-white/30 transition-colors duration-200';
-            tr.innerHTML = `
-                <td class="text-left pl-6 font-semibold text-slate-700 flex items-center pt-3">
-                    <span class="w-2.5 h-2.5 rounded-full mr-2 shadow-sm border border-white/50" style="background:${nodesInfo[wm.from]?.color}"></span> 
-                    <span class="text-xs">${wm.from}→</span>
-                    <span class="w-2.5 h-2.5 rounded-full ml-1 mr-2 shadow-sm border border-white/50" style="background:${nodesInfo[wm.to]?.color}"></span>
-                    ${wm.to}
-                </td>
-                <td><span class="inline-block px-2.5 py-1 bg-white/50 text-slate-800 rounded-lg text-xs font-bold border border-white/40 shadow-sm">${wm.w}</span></td>
-                <td>${dist === 0 ? '<span class="text-red-600 font-bold text-xs bg-red-100/80 px-2 py-1 rounded-md border border-red-200">阻断</span>' : `<span class="text-slate-600 font-medium">${dist}</span>`}</td>
-                <td class="pr-6 font-black text-lg ${dist === 0 || cost > 100 ? 'text-red-500' : 'text-teal-700'}">${dist === 0 ? '∞' : cost}</td>
-            `;
-            tbody.appendChild(tr);
+                // 登记网格使用情况
+                path.forEach(pt => {
+                    const key = `${pt.x},${pt.y}`;
+                    if(!cellUsage[key]) cellUsage[key] = new Set();
+                    cellUsage[key].add(f.role);
+                });
+            } else {
+                addLog(`动线阻断: [${ROLES[f.role].name}] 无法从 ${startNode.name} 到达 ${endNode.name}`, 'warning');
+            }
         });
 
-        currentTotalCost = total;
-        needsPathUpdate = false;
-    }
+        // 院感合规审计算法 (核心交叉检测)
+        let newCollisions = [];
+        Object.keys(cellUsage).forEach(key => {
+            const rolesHere = cellUsage[key];
+            // 致命违规：污废流 与 (患者、医护、洁净) 的任何交叉
+            if(rolesHere.has('WASTE')) {
+                let conflictWith = null;
+                if(rolesHere.has('PATIENT')) conflictWith = '患者流';
+                else if(rolesHere.has('CLEAN')) conflictWith = '洁净流';
+                else if(rolesHere.has('STAFF')) conflictWith = '医护流';
 
-    function renderGridFrame() {
-        if (needsPathUpdate) recalculatePaths();
-        gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-        animationOffset += 1;
-
-        gridCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; 
-        gridCtx.lineWidth = 1;
-        for (let i = 0; i <= cols; i+=2) { gridCtx.beginPath(); gridCtx.moveTo(i*cellSize, 0); gridCtx.lineTo(i*cellSize, rows*cellSize); gridCtx.stroke(); }
-        for (let j = 0; j <= rows; j+=2) { gridCtx.beginPath(); gridCtx.moveTo(0, j*cellSize); gridCtx.lineTo(cols*cellSize, j*cellSize); gridCtx.stroke(); }
-
-        for (let i = 0; i < cols; i++) {
-            for (let j = 0; j < rows; j++) {
-                if (grid[i][j] === 1) {
-                    gridCtx.fillStyle = 'rgba(100, 116, 139, 0.7)';
-                    gridCtx.fillRect(i*cellSize, j*cellSize, cellSize, cellSize);
-                    gridCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                    gridCtx.fillRect(i*cellSize, j*cellSize, cellSize, 1);
-                    gridCtx.fillRect(i*cellSize, j*cellSize, 1, cellSize);
+                if(conflictWith) {
+                    const [x, y] = key.split(',').map(Number);
+                    newCollisions.push({x, y, desc: `污废流与${conflictWith}严重交叉`});
                 }
             }
-        }
-
-        computedPaths.forEach(p => {
-            if (p.path.length < 2) return;
-            gridCtx.beginPath();
-            gridCtx.moveTo(p.path[0].x * cellSize + cellSize/2, p.path[0].y * cellSize + cellSize/2);
-            for(let i=1; i<p.path.length; i++) gridCtx.lineTo(p.path[i].x * cellSize + cellSize/2, p.path[i].y * cellSize + cellSize/2);
-            gridCtx.lineWidth = p.width; gridCtx.strokeStyle = p.color;
-            gridCtx.setLineDash([20, 15]); gridCtx.lineDashOffset = -(animationOffset * p.speed); 
-            gridCtx.shadowBlur = 8; gridCtx.shadowColor = p.color;
-            gridCtx.stroke();
-            gridCtx.shadowBlur = 0; gridCtx.setLineDash([]);
         });
+        collisions = newCollisions;
 
-        Object.keys(gridNodes).forEach(id => {
-            const pos = gridNodes[id];
-            const info = nodesInfo[id];
-            if(!info) return; // 容错
-            const cx = pos.x * cellSize + cellSize/2;
-            const cy = pos.y * cellSize + cellSize/2;
-
-            const radius = (id === draggingNodeId) ? cellSize * 3.2 : cellSize * 2.4;
-
-            gridCtx.beginPath();
-            gridCtx.arc(cx, cy, radius, 0, Math.PI * 2);
-            gridCtx.fillStyle = info.color;
-            gridCtx.shadowColor = 'rgba(0,0,0,0.3)';
-            gridCtx.shadowBlur = 10;
-            gridCtx.shadowOffsetY = 4;
-            gridCtx.fill();
-            gridCtx.shadowColor = 'transparent';
-
-            gridCtx.strokeStyle = '#ffffff';
-            gridCtx.lineWidth = 4;
-            gridCtx.stroke();
-            
-            gridCtx.fillStyle = '#fff';
-            gridCtx.font = 'bold 22px Inter, sans-serif';
-            gridCtx.textAlign = 'center'; gridCtx.textBaseline = 'middle';
-            gridCtx.fillText(id, cx, cy);
-        });
-
-        if (Math.abs(displayedCost - currentTotalCost) > 1) displayedCost += (currentTotalCost - displayedCost) * 0.15;
-        else displayedCost = currentTotalCost;
+        // 更新 UI 面板
+        document.getElementById('stat-length').innerHTML = `${totalLen}<span class="text-sm text-slate-400 ml-1">m</span>`;
+        const statusEl = document.getElementById('stat-status');
         
-        const scoreEl = document.getElementById('total-cost');
-        scoreEl.innerText = Math.round(displayedCost);
-        scoreEl.className = currentTotalCost > 2000 ? "text-7xl font-black text-red-500 tabular-nums tracking-tighter transition-colors drop-shadow-md" : "text-7xl font-black text-teal-700 tabular-nums tracking-tighter transition-colors drop-shadow-sm";
+        if(collisions.length > 0) {
+            statusEl.innerHTML = `<div class="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_#ef4444]"></div> <span class="text-red-500">院感违规 (${collisions.length})</span>`;
+            if(collisions.length !== previousCollisionCount) {
+                addLog(`检测到 ${collisions.length} 处空间交叉污染风险！请修改墙体或移动节点隔离动线。`, 'error');
+            }
+        } else {
+            statusEl.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div> <span class="text-emerald-400">合规 PASS</span>`;
+            if(previousCollisionCount > 0) {
+                addLog(`物理隔离已生效，交叉风险解除，符合院感规范。`, 'success');
+            }
+        }
+        previousCollisionCount = collisions.length;
+        needsUpdate = false;
+    }
+
+
+    // ==========================================
+    // Bresenham 画线算法 (完美连贯建墙)
+    // ==========================================
+    function drawLineOnGrid(x0, y0, x1, y1, val) {
+        let dx = Math.abs(x1 - x0);
+        let dy = Math.abs(y1 - y0);
+        let sx = (x0 < x1) ? 1 : -1;
+        let sy = (y0 < y1) ? 1 : -1;
+        let err = dx - dy;
+
+        while (true) {
+            // 确保在画布内
+            if(x0 >= 0 && x0 < cols && y0 >= 0 && y0 < rows) {
+                // 不覆盖节点
+                let isNode = false;
+                for(let id in nodes) {
+                    if(nodes[id].x === x0 && nodes[id].y === y0) { isNode = true; break; }
+                }
+                // 安全写入边界检查
+                if(!isNode && grid[x0]) {
+                    grid[x0][y0] = val;
+                }
+            }
+            if ((x0 === x1) && (y0 === y1)) break;
+            let e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+        }
+        needsUpdate = true;
     }
 
     // ==========================================
-    // 鼠标与触控事件
+    // 鼠标/触摸交互处理
     // ==========================================
     function getGridPos(e) {
-        const rect = gridCanvas.getBoundingClientRect();
-        const scaleX = gridCanvas.width / rect.width; const scaleY = gridCanvas.height / rect.height;
-        let clientX = e.clientX, clientY = e.clientY;
-        if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
-        const x = Math.floor((clientX - rect.left) * scaleX / cellSize);
-        const y = Math.floor((clientY - rect.top) * scaleY / cellSize);
+        const rect = canvas.getBoundingClientRect();
+        let cx = e.clientX, cy = e.clientY;
+        if (e.touches && e.touches.length > 0) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+        const x = Math.floor((cx - rect.left) / CELL_SIZE);
+        const y = Math.floor((cy - rect.top) / CELL_SIZE);
         return { x: Math.max(0, Math.min(cols - 1, x)), y: Math.max(0, Math.min(rows - 1, y)) };
     }
 
-    function isNodeAt(x, y, excludeId = null) {
-        for (let id in gridNodes) if (id !== excludeId && gridNodes[id].x === x && gridNodes[id].y === y) return id;
+    function isNodeAt(x, y) {
+        for (let id in nodes) {
+            if (nodes[id].x === x && nodes[id].y === y) return id;
+        }
         return null;
     }
 
-    function updateCursor(e) {
-        if (!e) return;
-        if (currentMode === 'move') {
-            const pos = getGridPos(e);
-            if (draggingNodeId) gridCanvas.style.cursor = 'grabbing';
-            else if (isNodeAt(pos.x, pos.y)) gridCanvas.style.cursor = 'grab';
-            else gridCanvas.style.cursor = 'default';
-        } else if (currentMode === 'build') gridCanvas.style.cursor = 'cell';
-        else gridCanvas.style.cursor = 'crosshair';
-    }
-
-    function handleStart(e) {
-        if (e.type === 'touchstart' && e.target === gridCanvas) e.preventDefault();
+    canvas.addEventListener('mousedown', (e) => {
         isInteracting = true;
         const pos = getGridPos(e);
-        
+        lastGridPos = pos;
+
+        // 处理新节点放置
+        if (placingNode) {
+            // 检查位置是否已有节点
+            if (!isNodeAt(pos.x, pos.y)) {
+                newNodeData.x = pos.x;
+                newNodeData.y = pos.y;
+                nodes[newNodeData.id] = { ...newNodeData };
+                addLog(`节点 ${newNodeData.name} 已放置在坐标 (${pos.x}, ${pos.y})`, 'success');
+                placingNode = false;
+                newNodeData = null;
+                needsUpdate = true;
+                renderUI();
+                updateNodeSelectors();
+                if(currentMode === 'move') canvas.style.cursor = 'grab';
+            } else {
+                addLog('该位置已有节点，请选择其他位置', 'warning');
+            }
+            return;
+        }
+
         if (currentMode === 'move') {
             draggingNodeId = isNodeAt(pos.x, pos.y);
-            updateCursor(e);
+            if(draggingNodeId) canvas.style.cursor = 'grabbing';
         } else if (currentMode === 'build') {
-            if (!isNodeAt(pos.x, pos.y) && grid[pos.x][pos.y] === 0) { grid[pos.x][pos.y] = 1; needsPathUpdate = true; }
+            drawLineOnGrid(pos.x, pos.y, pos.x, pos.y, 1);
         } else if (currentMode === 'erase') {
-            if (grid[pos.x][pos.y] === 1) { grid[pos.x][pos.y] = 0; needsPathUpdate = true; }
+            drawLineOnGrid(pos.x, pos.y, pos.x, pos.y, 0);
         }
-    }
+    });
 
-    function handleMove(e) {
-        updateCursor(e);
-        if (!isInteracting) return;
-        if (e.type === 'touchmove' && e.target === gridCanvas) e.preventDefault();
+    canvas.addEventListener('mousemove', (e) => {
         const pos = getGridPos(e);
+        
+        // 悬停光标反馈
+        if(!isInteracting && currentMode === 'move') {
+            canvas.style.cursor = isNodeAt(pos.x, pos.y) ? 'grab' : 'crosshair';
+        }
+
+        if (!isInteracting) return;
 
         if (currentMode === 'move' && draggingNodeId) {
-            if (!isNodeAt(pos.x, pos.y, draggingNodeId)) {
-                gridNodes[draggingNodeId].x = pos.x; gridNodes[draggingNodeId].y = pos.y; needsPathUpdate = true;
+            // 确保不重叠
+            if (!isNodeAt(pos.x, pos.y) || isNodeAt(pos.x, pos.y) === draggingNodeId) {
+                nodes[draggingNodeId].x = pos.x;
+                nodes[draggingNodeId].y = pos.y;
+                needsUpdate = true;
+                renderUI(); // 更新坐标显示
             }
         } else if (currentMode === 'build') {
-            if (!isNodeAt(pos.x, pos.y) && grid[pos.x][pos.y] === 0) { grid[pos.x][pos.y] = 1; needsPathUpdate = true; }
+            drawLineOnGrid(lastGridPos.x, lastGridPos.y, pos.x, pos.y, 1);
         } else if (currentMode === 'erase') {
-            if (grid[pos.x][pos.y] === 1) { grid[pos.x][pos.y] = 0; needsPathUpdate = true; }
+            drawLineOnGrid(lastGridPos.x, lastGridPos.y, pos.x, pos.y, 0);
+        }
+        lastGridPos = pos;
+    });
+
+    window.addEventListener('mouseup', () => {
+        isInteracting = false;
+        draggingNodeId = null;
+        if(currentMode === 'move') canvas.style.cursor = 'grab';
+    });
+
+    // 跟踪鼠标位置
+    function setupMouseTracking() {
+        document.addEventListener('mousemove', (e) => {
+            window.mouseX = e.clientX;
+            window.mouseY = e.clientY;
+            
+            // 处理画布拖拽
+            if (canvasTransform.isDragging) {
+                const deltaX = e.clientX - canvasTransform.lastMouseX;
+                const deltaY = e.clientY - canvasTransform.lastMouseY;
+                canvasTransform.offsetX += deltaX;
+                canvasTransform.offsetY += deltaY;
+                canvasTransform.lastMouseX = e.clientX;
+                canvasTransform.lastMouseY = e.clientY;
+            }
+        });
+        
+        // 鼠标滚轮缩放
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // 计算鼠标在变换前的世界坐标
+            const worldX = (mouseX - canvasTransform.offsetX) / canvasTransform.scale;
+            const worldY = (mouseY - canvasTransform.offsetY) / canvasTransform.scale;
+            
+            // 缩放因子
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.max(0.1, Math.min(3, canvasTransform.scale * zoomFactor));
+            
+            // 调整偏移量以保持鼠标位置不变
+            canvasTransform.offsetX = mouseX - worldX * newScale;
+            canvasTransform.offsetY = mouseY - worldY * newScale;
+            canvasTransform.scale = newScale;
+        });
+    }
+
+    // 鼠标中键拖拽支持
+    canvas.addEventListener('mousedown', (e) => {
+        if (e.button === 1) { // 中键
+            e.preventDefault();
+            canvasTransform.isDragging = true;
+            canvasTransform.lastMouseX = e.clientX;
+            canvasTransform.lastMouseY = e.clientY;
+            canvas.style.cursor = 'grabbing';
+        }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (e.button === 1) { // 中键
+            canvasTransform.isDragging = false;
+            canvas.style.cursor = canvasTransform.isDragging ? 'grabbing' : (currentMode === 'move' ? 'grab' : (currentMode === 'build' ? 'cell' : 'not-allowed'));
+        }
+    });
+
+    // 防止右键菜单
+    canvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    });
+
+    // 移动端触摸支持
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousedown', {clientX: e.touches[0].clientX, clientY: e.touches[0].clientY})); }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousemove', {clientX: e.touches[0].clientX, clientY: e.touches[0].clientY})); }, {passive: false});
+    window.addEventListener('touchend', () => { canvas.dispatchEvent(new MouseEvent('mouseup')); });
+
+    // ==========================================
+    // 渲染循环 (Canvas 绘制)
+    // ==========================================
+    function renderFrame() {
+        if(needsUpdate) runSimulationEngine();
+
+        // 1. 清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        animationOffset += 0.5;
+
+        // 应用画布变换
+        ctx.save();
+        ctx.translate(canvasTransform.offsetX, canvasTransform.offsetY);
+        ctx.scale(canvasTransform.scale, canvasTransform.scale);
+
+        // 2. 绘制底图（如果有）
+        if (backgroundImage) {
+            ctx.save();
+            ctx.globalAlpha = backgroundImageOpacity;
+            
+            // 计算缩放以适应画布
+            const scaleX = canvas.width / backgroundImage.width;
+            const scaleY = canvas.height / backgroundImage.height;
+            const scale = Math.max(scaleX, scaleY);
+            
+            const scaledWidth = backgroundImage.width * scale;
+            const scaledHeight = backgroundImage.height * scale;
+            
+            const offsetX = (canvas.width - scaledWidth) / 2;
+            const offsetY = (canvas.height - scaledHeight) / 2;
+            
+            ctx.drawImage(backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+            ctx.restore();
+        }
+
+        // 3. 绘制墙体
+        ctx.fillStyle = 'rgba(71, 85, 105, 0.8)'; // Slate 600
+        for (let i = 0; i < cols; i++) {
+            if (!grid[i]) continue; // 防御性检查
+            for (let j = 0; j < rows; j++) {
+                if (grid[i][j] === 1) {
+                    ctx.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    // 墙体高光纹理
+                    ctx.fillStyle = 'rgba(148, 163, 184, 0.3)';
+                    ctx.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, 2);
+                    ctx.fillRect(i * CELL_SIZE, j * CELL_SIZE, 2, CELL_SIZE);
+                    ctx.fillStyle = 'rgba(71, 85, 105, 0.8)';
+                }
+            }
+        }
+
+        // 3. 绘制路径流线
+        computedPaths.forEach(p => {
+            if(p.points.length < 2) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(p.points[0].x * CELL_SIZE + CELL_SIZE/2, p.points[0].y * CELL_SIZE + CELL_SIZE/2);
+            for(let i=1; i<p.points.length; i++) {
+                ctx.lineTo(p.points[i].x * CELL_SIZE + CELL_SIZE/2, p.points[i].y * CELL_SIZE + CELL_SIZE/2);
+            }
+
+            // 发光底层
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = p.glow;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // 核心流动线
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = p.color;
+            ctx.setLineDash([12, 12]);
+            // 不同角色流动速度和方向可调，这里用统一的 animationOffset
+            ctx.lineDashOffset = -animationOffset * (p.role === 'WASTE' ? 2 : 1.5); 
+            ctx.stroke();
+            ctx.setLineDash([]); // reset
+        });
+
+        // 4. 绘制警告/碰撞点 (院感警报)
+        collisions.forEach(col => {
+            const cx = col.x * CELL_SIZE + CELL_SIZE/2;
+            const cy = col.y * CELL_SIZE + CELL_SIZE/2;
+            
+            // 脉冲扩散效果
+            const pulse = (Math.sin(animationOffset * 0.2) + 1) / 2; // 0 to 1
+            const r = CELL_SIZE + pulse * CELL_SIZE;
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(239, 68, 68, ${0.4 - pulse * 0.3})`;
+            ctx.fill();
+
+            // 警告核心点
+            ctx.beginPath();
+            ctx.arc(cx, cy, CELL_SIZE/2, 0, Math.PI * 2);
+            ctx.fillStyle = '#ef4444';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 绘制感叹号
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('!', cx, cy);
+        });
+
+        // 5. 绘制新节点预览（如果正在放置节点）
+        if (placingNode && newNodeData) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (window.mouseX || rect.width/2) - rect.left;
+            const mouseY = (window.mouseY || rect.height/2) - rect.top;
+            const gridX = Math.floor(mouseX / CELL_SIZE);
+            const gridY = Math.floor(mouseY / CELL_SIZE);
+            
+            if (gridX >= 0 && gridX < cols && gridY >= 0 && gridY < rows && !isNodeAt(gridX, gridY)) {
+                const cx = gridX * CELL_SIZE + CELL_SIZE/2;
+                const cy = gridY * CELL_SIZE + CELL_SIZE/2;
+                
+                // 半透明预览
+                ctx.beginPath();
+                ctx.arc(cx, cy, CELL_SIZE * 0.8, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
+                ctx.fill();
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 11px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(newNodeData.id, cx, cy);
+                
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.font = '10px Noto Sans SC';
+                ctx.fillText(newNodeData.name, cx, cy - CELL_SIZE * 0.8 - 8);
+            }
+        }
+
+        // 6. 绘制功能节点
+        Object.values(nodes).forEach(n => {
+            const cx = n.x * CELL_SIZE + CELL_SIZE/2;
+            const cy = n.y * CELL_SIZE + CELL_SIZE/2;
+            const isDragging = draggingNodeId === n.id;
+            const radius = isDragging ? CELL_SIZE : CELL_SIZE * 0.8;
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#1e293b'; // slate-800
+            ctx.fill();
+            
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = isDragging ? '#3b82f6' : '#94a3b8';
+            ctx.stroke();
+
+            ctx.fillStyle = isDragging ? '#fff' : '#cbd5e1';
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(n.id, cx, cy);
+
+            // 节点文字标注
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = '10px Noto Sans SC';
+            ctx.fillText(n.name, cx, cy - radius - 8);
+        });
+
+        ctx.restore(); // 恢复画布变换状态
+        requestAnimationFrame(renderFrame);
+    }
+
+    // ==========================================
+    // 项目导入导出功能
+    // ==========================================
+    function exportProject() {
+        try {
+            // 收集所有项目数据
+            const projectData = {
+                version: '2.0',
+                timestamp: new Date().toISOString(),
+                nodes: nodes,
+                flows: flows,
+                walls: grid,
+                canvasTransform: {
+                    scale: canvasTransform.scale,
+                    offsetX: canvasTransform.offsetX,
+                    offsetY: canvasTransform.offsetY
+                },
+                backgroundImage: {
+                    data: backgroundImageData,
+                    opacity: backgroundImageOpacity
+                },
+                grid: {
+                    cellSize: CELL_SIZE,
+                    cols: cols,
+                    rows: rows
+                }
+            };
+
+            // 转换为JSON字符串
+            const jsonData = JSON.stringify(projectData, null, 2);
+            
+            // 创建下载链接
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `medical_space_plan_${new Date().getTime()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('项目方案已成功导出', 'success');
+        } catch (error) {
+            addLog(`导出失败: ${error.message}`, 'error');
         }
     }
 
-    function handleEnd(e) { isInteracting = false; draggingNodeId = null; updateCursor(e); }
+    function importProject(event) {
+        try {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const projectData = JSON.parse(e.target.result);
+                    
+                    // 验证数据格式
+                    if (!projectData.version || !projectData.nodes || !projectData.flows) {
+                        throw new Error('无效的项目文件格式');
+                    }
+                    
+                    // 清空现有数据
+                    nodes = {};
+                    flows = [];
+                    
+                    // 恢复节点数据
+                    nodes = projectData.nodes;
+                    
+                    // 恢复流线数据
+                    flows = projectData.flows;
+                    
+                    // 恢复墙体数据
+                    if (projectData.walls) {
+                        grid = projectData.walls;
+                    }
+                    
+                    // 恢复画布变换状态
+                    if (projectData.canvasTransform) {
+                        canvasTransform.scale = projectData.canvasTransform.scale || 1;
+                        canvasTransform.offsetX = projectData.canvasTransform.offsetX || 0;
+                        canvasTransform.offsetY = projectData.canvasTransform.offsetY || 0;
+                    }
+                    
+                    // 恢复底图
+                    if (projectData.backgroundImage && projectData.backgroundImage.data) {
+                        const img = new Image();
+                        img.onload = function() {
+                            backgroundImage = img;
+                            backgroundImageData = projectData.backgroundImage.data;
+                            backgroundImageOpacity = projectData.backgroundImage.opacity || 0.7;
+                            document.getElementById('imageOpacity').value = backgroundImageOpacity * 100;
+                            document.getElementById('opacityValue').textContent = Math.round(backgroundImageOpacity * 100) + '%';
+                            addLog('底图已恢复', 'success');
+                        };
+                        img.src = projectData.backgroundImage.data;
+                    }
+                    
+                    // 重新初始化画布
+                    initCanvas();
+                    
+                    // 更新UI
+                    renderUI();
+                    updateNodeSelectors();
+                    needsUpdate = true;
+                    
+                    addLog('项目方案已成功导入', 'success');
+                } catch (error) {
+                    addLog(`导入失败: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        } catch (error) {
+            addLog(`导入失败: ${error.message}`, 'error');
+        }
+    }
 
-    gridCanvas.addEventListener('mousedown', handleStart); gridCanvas.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleEnd);
-    gridCanvas.addEventListener('touchstart', handleStart, {passive: false}); gridCanvas.addEventListener('touchmove', handleMove, {passive: false}); window.addEventListener('touchend', handleEnd);
-
-    function mainLoop() { renderTopologyFrame(); renderGridFrame(); requestAnimationFrame(mainLoop); }
-
+    // ==========================================
+    // 启动程序
+    // ==========================================
     window.onload = () => {
-        setTimeout(() => { presetLayout('B'); }, 100);
-        requestAnimationFrame(mainLoop);
+        initCanvas();
+        renderUI();
+        setupBackgroundImageHandling();
+        setupMouseTracking();
+        updateNodeSelectors();
+        addLog('多维合规推演系统已上线，载入预设物理模型...', 'info');
+        addLog('提示：试着将【污物暂存】节点拖动到【患者流】走廊中，观察警报！', 'warning');
+        addLog('新功能：支持导入底图、创建自定义节点和流线！', 'success');
+        addLog('新增：项目方案导入导出功能已启用', 'success');
+        requestAnimationFrame(renderFrame);
     };
 
 </script>
